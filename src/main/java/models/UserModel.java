@@ -29,6 +29,10 @@ package models;
      public String toString() {
          return this.username+" "+this.password+ " "+this.email;
      }
+
+     public void Max(){
+
+     }
      //Save to database method,
     //public saveUserDataToDB
 }
