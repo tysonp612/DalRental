@@ -32,5 +32,4 @@ package models;
      //Save to database method,
     //public saveUserDataToDB
 
-     public void check(){int x = 2;}
 }
