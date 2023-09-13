@@ -33,6 +33,10 @@ package models;
      private void newBranch(){
          System.out.println("brench");
      }
+
+     private void mean(){
+
+     }
      //Save to database method,
     //public saveUserDataToDB
 }
