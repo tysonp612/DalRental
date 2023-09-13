@@ -35,7 +35,7 @@ package models;
      }
 
      private void mean(){
-
+        int x =3;
      }
      //Save to database method,
     //public saveUserDataToDB
