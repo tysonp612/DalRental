@@ -29,6 +29,14 @@ package models;
      public String toString() {
          return this.username+" "+this.password+ " "+this.email;
      }
+
+     private void newBranch(){
+         System.out.println("brench");
+     }
+
+     private void mean(){
+        int x =3;
+     }
      //Save to database method,
     //public saveUserDataToDB
 
