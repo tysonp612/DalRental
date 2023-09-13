@@ -27,7 +27,6 @@ public class MainApplication extends Application {
         primaryStage.setScene(new Scene(root));
         primaryStage.setTitle("Sign Up Page");
         primaryStage.show();
-
     }
 
     

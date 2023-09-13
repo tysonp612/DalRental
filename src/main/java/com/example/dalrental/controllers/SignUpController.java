@@ -56,7 +56,7 @@ public class SignUpController {
     @FXML
     private void checkPasswordConfirm() {
         //if the passwordConfirm field is not yet typed, no error shown
-        if (this.passwordConfirmInput.getText().length() > 0) {
+        if (!this.passwordConfirmInput.getText().isEmpty()) {
             //if it is typed, start comparing with the password typed after checking length;
             if (this.password != null && passwordConfirmInput.getText().equals(this.password)) {
                 closeErrorPanel();
@@ -69,7 +69,7 @@ public class SignUpController {
 
     @FXML
     private void checkDalEmail() {
-        if (this.emailInput.getText().length() > 0) {
+        if (!this.emailInput.getText().isEmpty()) {
             if (this.emailInput.getText().contains("@dal")) {
                 closeErrorPanel();
                 this.email = emailInput.getText();
