@@ -4,6 +4,7 @@ module com.example.dalrental {
 
     requires org.controlsfx.controls;
     requires org.kordamp.bootstrapfx.core;
+    requires kotlin.stdlib;
 
     opens com.example.dalrental to javafx.fxml;
     exports com.example.dalrental;
