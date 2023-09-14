@@ -29,7 +29,7 @@
       <PasswordField fx:id="passwordInput" layoutX="220.0" layoutY="202.0" onKeyTyped="#checkLength" />
       <PasswordField fx:id="passwordConfirmInput" layoutX="220.0" layoutY="240.0" onKeyTyped="#checkPasswordConfirm" />
       <Button fx:id="createUserBtn" layoutX="220.0" layoutY="334.0" mnemonicParsing="false" onMouseClicked="#createUserAndSaveToDB" text="Submit" />
-      <Button layoutX="310.0" layoutY="334.0" mnemonicParsing="false" text="Cancel" />
+      <Button fx:id="goToLoginBtn" layoutX="310.0" layoutY="334.0" mnemonicParsing="false" onAction="#goToLogin" text="Cancel" />
       <Label id="signUpErrorPanel" fx:id="signUpErrorPanel" alignment="CENTER" layoutX="119.0" layoutY="103.0" opacity="0.0" prefHeight="41.0" prefWidth="363.0" style="-fx-background-color: RED;" textFill="WHITE" textOverrun="CLIP" />
       <Button id="closeErrorPanelBtn" fx:id="closeErrorPanelBtn" layoutX="455.0" layoutY="111.0" mnemonicParsing="false" onAction="#closeErrorPanel" opacity="0.0" style="-fx-background-color: NONE;" text="X" textOverrun="CLIP">
          <cursor>
