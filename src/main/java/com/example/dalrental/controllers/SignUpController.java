@@ -103,7 +103,7 @@ public class SignUpController {
     }
 
 
-    private <T extends Control> String findId(KeyEvent event  , Class<T> controlClass) {
+    private <T extends Control> String findId(KeyEvent event, Class<T> controlClass) {
         Object source = event.getSource();
 
         if (controlClass.isInstance(source)) {
