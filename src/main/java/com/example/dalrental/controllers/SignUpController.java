@@ -4,8 +4,8 @@ import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import models.UserCredentials;
-import models.UserModel;
 import utilities.auth.KeyedPasswordCryptographer;
+import utilities.auth.PasswordEncryptEngine;
 
 public class SignUpController {
     private String username;
@@ -29,13 +29,6 @@ public class SignUpController {
 
     @FXML
     private void checkLength(KeyEvent e) {
-//        //How to get ID of any element
-//        //1. get source of event, this will return an object
-//        Object source = e.getSource();
-//        //2. Casting from object to textField (or the elememnt's proper type)
-//        TextField input = (TextField) source;
-//        //3. In the element type (no object), we can extract id by using .getId();
-//        String id = input.getId();
         String id = findId(e, TextField.class);
         if (id.equals("userInput")) {
             if (usernameInput.getText().length() < 8 && usernameInput.getText().length() > 2) {
@@ -97,23 +90,40 @@ public class SignUpController {
 
     @FXML
     private void createUserAndSaveToDB() {
-        UserCredentials<KeyedPasswordCryptographer> newUser
-                = new UserCredentials<>(this.username,this.email,KeyedPasswordCryptographer.class);
+        // Encryption engine used to hash passwords
+        Class<? extends PasswordEncryptEngine> encryptionEngine = KeyedPasswordCryptographer.class;
+
+        UserCredentials<? extends PasswordEncryptEngine> newUser
+                = new UserCredentials<>(this.username, this.email, encryptionEngine);
+
+        // Encrypts the given password and sets it into the user's credentials
         newUser.setPassword(this.password);
+
         // TODO: newUser.saveToDB();
         System.out.println(newUser);
     }
 
 
+    /**
+     * Finds the ID of the key event
+     * @param event  KeyEvent you want to get the ID of
+     * @param controlClass Class you want the event to be cast to
+     * @return ID as a string
+     * @param <T> Cast Object
+     */
     private <T extends Control> String findId(KeyEvent event, Class<T> controlClass) {
-        Object source = event.getSource();
-
-        if (controlClass.isInstance(source)) {
+        try {
+            Object source = event.getSource();
             T control = controlClass.cast(source);
             return control.getId();
-        } else {
+        } catch (ClassCastException e) {
+            System.out.println();
             // Handle the case where the source is not of type T
-            return null; // or throw an exception, depending on your use case
+            throw new ClassCastException(String.format("""
+                            Fatal class cast exception. Cannot cast from %s to %s
+                            """.trim(),
+                    event,
+                    controlClass.getName()));
         }
     }
 }
