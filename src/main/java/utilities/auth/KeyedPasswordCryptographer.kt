@@ -3,11 +3,15 @@ package utilities.auth
 import models.UserCredentials
 import kotlin.math.abs
 
+/**
+ * The [KeyedPasswordCryptographer] class provides methods for encrypting passwords
+ * and storing them in [UserCredentials] objects.
+ * It uses a multistep encryption process involving unique keys and Qwerty keyboard-based transformations.
+ */
 class KeyedPasswordCryptographer : PasswordEncryptEngine {
 
-
     /**
-     * Encrypts the data and writes the hashed password to the [UserCredentials] passed in
+     * Encrypts the password and writes it to the [UserCredentials] passed in
      *
      * Steps Used For Encryption
      *
@@ -15,93 +19,84 @@ class KeyedPasswordCryptographer : PasswordEncryptEngine {
      *
      *  . Run the first step of encryption on the password
      *
-     *  . Convert the result of the first step into 256 bit long
+     *  . Convert the result of the first step into a 256-bit long
      *    string and then convert it into a hex format
      *
-     *  . Run the hash with the last 3 words of the salt appended to
+     *  . Run the hash with the last three words of the salt appended to
      *    the beginning of hex, into the last encryption algorithm
      *  @param password Text you want to encrypt
-     *  @param userCredentials The userCredentials you want to match it too
+     *  @param userCredentials The userCredentials you want to Store the hash into
      *  @return Returns true if it successful and false
      *  if an error occurred
      */
     override fun <T : PasswordEncryptEngine> encrypt(
         password: String, userCredentials: UserCredentials<T>
     ) {
-        // Max len - salt used to make a 256bit number minus
-        if (password.length > 28 - userCredentials.salt.length) {
-            throw IllegalArgumentException(
-                "Password $password with length ${password.length} cannot be of more than length 28"
-            )
-        }
 
         /*
-             Sum up all char and do a bit wise left  shift while taking the absolute bit wise or between the
-             integer value of the first and last char
+            Generates a key, the height of a keyboard used for swapping the passwords
 
-            threeDigitKey = abs((allCharIntSum << abs(fistCharInt | lastCharInt)) mod 999)
+            qwertyKey = abs (sum(charInPassword | indexOfChar) << abs(
+                sum(charInPassword (if even index then do a bit wise or else bit wise and) indexOfChar))
+            ) % 9 repeated keyboardLen times
+
+            if number is key is less than the keyboard len then pad Zeros to the start till the len matches
          */
         val keyLen = keyBoard.size
-        val qwertyKey: String =
-            abs((password.sumOf { it.code } shl abs(password[0].code or password[password.lastIndex].code)) % 99999).let { key ->
+        val qwertyKey: String = run {
+            var index = 0
+            abs(password.sumOf { it.code or ++index } shl abs(
+                run {
+                    var sum = 0
+                    for (idx in password.indices) {
+                        if (idx % 2 == 0) sum += password[idx].code or idx
+                        else password[idx].code and idx
+                    }
+                    sum
+                }
+            ) % "9".repeat(keyLen).toInt()).let { key ->
                 // take the last n words
                 "${"0".repeat(keyLen)}$key".takeLast(keyLen)
             }
-
-        println("${"-".repeat(10)}\nPassword: $password")
-        println("Salt: ${userCredentials.salt}")
-        val saltedPassword: StringBuilder = StringBuilder(password + userCredentials.salt.take(3))
-        println("SaltedPassword: $saltedPassword")
-        println("QwertyKey: $qwertyKey")
-        qwertyEncryption(saltedPassword, qwertyKey)
-        println("Qwerty: $saltedPassword")
-
-        // Create a binary representation for each character of the previous encryption
-        val binaryBits = StringBuilder().apply {
-            // Append the salt as binary
-            for (char in userCredentials.salt.takeLast(3)) append(Integer.toBinaryString(256 or char.code))
-
-            // Append the previous encoding
-            for (char in saltedPassword) append(Integer.toBinaryString(256 or char.code))
-
         }
 
-        println("BinaryBits: $binaryBits")
+        val saltedPassword: StringBuilder = StringBuilder(password + userCredentials.salt)
+        qwertyEncryption(saltedPassword, qwertyKey)
 
-        // The key is the fist char value in int format from the saltedPassword
-        val splitKey: Int = saltedPassword[0].code
-        alternatingSplitEncryption(binaryBits, splitKey)
+        val bitLen = 256
+        // Create a binary representation for each character of the previous encryption with each char 'bitLen' long
+        val binaryStrings = StringBuilder().apply {
+            // Append the salt as binary
+            for (char in userCredentials.salt) append(Integer.toBinaryString(bitLen or char.code))
 
-        println("SplitKey: $splitKey")
-        println("Alternating Splits: $binaryBits")
+            // Append the previous encoding
+            for (char in saltedPassword) append(Integer.toBinaryString(bitLen or char.code))
+        }
 
-        val hexFormat = toHexFormat(binaryBits)
+        // The key is the last char value in int format from the encrypted saltedPassword
+        val splitKey: Int = saltedPassword[saltedPassword.lastIndex].code
+        alternatingSplitEncryption(binaryStrings, splitKey)
 
-        println("HexFormat: $hexFormat\n${"-".repeat(10)}")
+        val hexFormat = toHexFormat(binaryStrings)
+
+        // println("HexFormat: $hexFormat\n${"-".repeat(10)}")
 
         userCredentials.hash = hexFormat
     }
 
-    /**
-     * Checks if a password matches with the actual passwords
-     * @param password The password you want to validate
-     * @param hash The saved password you want to compare to
-     * @param salt The salt value used for the hash
-     * @return Returns true if its matches and false if not
-     */
-    override fun <T : PasswordEncryptEngine> match(
-        password: String, userCredentials: UserCredentials<T>
-    ): Boolean {
-        TODO("Not yet implemented")
-    }
 
-    private fun toHexFormat(binaryBits: StringBuilder): String {
-        return binaryBits
+    /**
+     * Converts the binary strings into hex format
+     * @param binaryStrings The binary string to convert
+     * @return The hex format as a string
+     */
+    private fun toHexFormat(binaryStrings: StringBuilder): String {
+        /*
+            E.g.: Array that's returned after splitting can be -> [, 1,0,1,1, ] so I remove the first and last space
+            using .drop() and .dropLast() respectively
+        */
+        return binaryStrings
             .split(Regex(""))
-            /*
-                Eg: Array returned -> [,1,2,3,4,] so I remove the first and last space
-                using drop and dropLast
-             */
             .drop(1)
             .dropLast(1)
             .reversed()
@@ -112,10 +107,15 @@ class KeyedPasswordCryptographer : PasswordEncryptEngine {
             .reversed()
     }
 
-    private fun binaryToHex(binary: List<String>): String {
+    /**
+     * Converts a binary list *{THAT'S BACKWARDS} to string
+     * @param binaryList Reversed binary string to convert
+     * @return Hex in capital letter format
+     */
+    private fun binaryToHex(binaryList: List<String>): String {
         var binaryToDecimal = 0
-        for (idx in binary.indices) {
-            if (binary[idx] == "1")
+        for (idx in binaryList.indices) {
+            if (binaryList[idx] == "1")
                 binaryToDecimal += if (idx == 0) 1 else 2 shl (idx - 1)
         }
         val hex = Integer.toHexString(binaryToDecimal)
@@ -123,14 +123,15 @@ class KeyedPasswordCryptographer : PasswordEncryptEngine {
     }
 
     /**
-     *
-     * @param binaryBits The bits to be swapped
-     * @param splitKey The amount of times to be swapped
+     * When given a binaryString B and a key K concatenates all the odd-indexed characters of B,
+     * with all the even-indexed characters of B, this process should be repeated K times
+     * @param binaryString The bits to be swapped
+     * @param splitKey The number of times to be swapped
      */
-    private fun alternatingSplitEncryption(binaryBits: StringBuilder, splitKey: Int) {
+    private fun alternatingSplitEncryption(binaryString: StringBuilder, splitKey: Int) {
         // Keep a copy of the original list as we would use this as we rebuild the swapped bits
-        var finalResult = StringBuilder(binaryBits)
-        var swapList = StringBuilder(binaryBits)
+        var finalResult = StringBuilder(binaryString)
+        var swapList = StringBuilder(binaryString)
         for (idx in 0..<splitKey) {
             // Set the startPos to the middle of the list to append the even indexes
             var startPos = finalResult.length / 2
@@ -142,36 +143,48 @@ class KeyedPasswordCryptographer : PasswordEncryptEngine {
             for (odd in 1..<finalResult.length step 2)
                 swapList[startPos++] = finalResult[odd]
 
+            // Swap the two lists to redo the swap for the next iteration
             finalResult = swapList.apply { swapList = finalResult }
         }
-        for (idx in binaryBits.indices) {
-            binaryBits[idx] = finalResult[idx]
+        // Writes the result to be the new binary string
+        for (idx in binaryString.indices) {
+            binaryString[idx] = finalResult[idx]
         }
     }
 
+    /**
+     * Keyboard used for the password key swap
+     */
     private val keyBoard: Array<Array<Char>> = arrayOf(
+        arrayOf('!', '@', '#', '$', '%', '^', '&', '*', '(', ')'),
         arrayOf('1', '2', '3', '4', '5', '6', '7', '8', '9', '0'),
         arrayOf('q', 'w', 'e', 'r', 't', 'y', 'u', 'i', 'o', 'p'),
         arrayOf('a', 's', 'd', 'f', 'g', 'h', 'j', 'k', 'l', ':'),
         arrayOf('z', 'x', 'c', 'v', 'b', 'n', 'm', ',', '.', '/')
     )
 
+    /**
+     * This is a variant of qwerty encryption found in codewars.
+     * It's done by performing a swap on the row the particular key is found on
+     * @see <a href="https://www.codewars.com/kata/57f14afa5f2f226d7d0000f4/java">Simple Encryption #4 - Qwerty</a>
+     */
     private fun qwertyEncryption(
-        passwordSalted: StringBuilder, key: String
+        passwordSalted: StringBuilder,
+        key: String
     ) {
         for (idx in passwordSalted.indices) {
             val currChar = passwordSalted[idx]
             for (row in keyBoard.indices) {
                 for (col in keyBoard[row].indices) {
                     if (keyBoard[row][col] == currChar) {
-                        // Find the wrap on that row
+                        // Find the offset wrap on that row to get the new key
                         val offset = (row + key[row].toString().toInt()) % keyBoard[row].size
                         passwordSalted[idx] = keyBoard[row][offset]
                     }
                 }
             }
-            passwordSalted[idx] = (passwordSalted[idx].code xor 32).toChar()
         }
     }
 
 }
+

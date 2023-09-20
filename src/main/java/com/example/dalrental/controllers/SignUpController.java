@@ -3,7 +3,9 @@ package com.example.dalrental.controllers;
 import javafx.fxml.FXML;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
+import models.UserCredentials;
 import models.UserModel;
+import utilities.auth.KeyedPasswordCryptographer;
 
 public class SignUpController {
     private String username;
@@ -95,10 +97,10 @@ public class SignUpController {
 
     @FXML
     private void createUserAndSaveToDB() {
-        //hash password first
-        //create new user
-        UserModel newUser = new UserModel(this.username, this.password, this.email);
-        //newUser.saveToDB();
+        UserCredentials<KeyedPasswordCryptographer> newUser
+                = new UserCredentials<>(this.username,this.email,KeyedPasswordCryptographer.class);
+        newUser.setPassword(this.password);
+        // TODO: newUser.saveToDB();
         System.out.println(newUser);
     }
 
