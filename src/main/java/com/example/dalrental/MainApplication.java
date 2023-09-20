@@ -17,7 +17,7 @@ public class MainApplication extends Application {
     //This is the home page, it will open when app is launched, we want login page opens first
     public void start(Stage primaryStage) throws Exception {
         this.primaryStage = primaryStage;
-        showSignUpPage(); // Display the sign-up page initially
+        showLoginPage(); // Display the sign-up page initially
     }
 
     //load the signup page, use FXML Loader to load the page, *com.example.fxml path is changed to /com/example/fxml
@@ -29,6 +29,14 @@ public class MainApplication extends Application {
         primaryStage.show();
     }
 
-    
+    //Connect login page with main application
+    public void showLoginPage() throws Exception{
+        FXMLLoader fxmlLoader = new FXMLLoader(getClass().getResource("/com/example/dalrental/views/Login.fxml"));
+        Parent root = fxmlLoader.load();
+        primaryStage.setScene(new Scene(root));
+        primaryStage.setTitle("Login Page");
+        primaryStage.show();
+    }
+
 
 }

@@ -1,11 +1,16 @@
 package com.example.dalrental.controllers;
 
 import javafx.fxml.FXML;
+import javafx.fxml.FXMLLoader;
+import javafx.scene.Parent;
+import javafx.scene.Scene;
 import javafx.scene.control.*;
 import javafx.scene.input.KeyEvent;
 import models.UserCredentials;
 import utilities.auth.KeyedPasswordCryptographer;
 import utilities.auth.PasswordEncryptEngine;
+
+import java.io.IOException;
 
 public class SignUpController {
     private String username;
@@ -26,7 +31,8 @@ public class SignUpController {
     private Button closeErrorPanelBtn;
     @FXML
     private Button createUserBtn;
-
+    @FXML
+    private Button goToLoginBtn;
     @FXML
     private void checkLength(KeyEvent e) {
         String id = findId(e, TextField.class);
@@ -103,6 +109,19 @@ public class SignUpController {
         System.out.println(newUser);
     }
 
+    //move back to login page
+    @FXML
+    private void goToLogin(){
+        try{
+            FXMLLoader loader = new FXMLLoader(getClass().getResource("/com/example/dalrental/views/Login.fxml"));
+            Parent root = loader.load();
+            Stage stage = (Stage) goToLoginBtn.getScene().getWindow();
+            stage.setScene(new Scene(root));
+        }catch (IOException e){
+            e.printStackTrace();
+        }
+
+    }
 
     /**
      * Finds the ID of the key event
